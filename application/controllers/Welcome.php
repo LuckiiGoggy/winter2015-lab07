@@ -21,9 +21,26 @@ class Welcome extends Application {
     function index()
     {
 	// Build a list of orders
-	
+        $this->load->helper('directory');
+        $this->load->model('Menu');
+	$map = directory_map('./data/', FALSE, TRUE);
+        $orderlist = array();
+        $test = "order";
+        
+        
+        foreach($map as $file){
+            if((substr_compare($file, $test, 0, strlen($test)) === 0)){
+                $temp = array(  'title' => substr($file, 0, 6) , 'file' => $file);
+                array_push($orderlist, $temp);
+            }
+        }
+        $this->data['orders'] = $orderlist;
+        
+        
 	// Present the list to choose from
 	$this->data['pagebody'] = 'homepage';
+        
+        
 	$this->render();
     }
     
@@ -34,7 +51,21 @@ class Welcome extends Application {
     function order($filename)
     {
 	// Build a receipt for the chosen order
-	
+        $this->load->model('Orders', 'orders');
+        
+        $this->orders->init($filename);
+        
+        $orderInfo = $this->orders->getOrderInfo();
+        
+        print_r("<br /><br />");
+        print_r($orderInfo);
+        
+        $this->data['ordertype'] = $orderInfo['orderType'];
+        $this->data['customer'] = $orderInfo['customerName'];
+        
+        $this->data['burgerlist'] = $this->parser->parse('_burger', $orderInfo, true);
+        
+        
 	// Present the list to choose from
 	$this->data['pagebody'] = 'justone';
 	$this->render();

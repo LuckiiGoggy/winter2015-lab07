@@ -1,3 +1,6 @@
 <div class="row">
-A burger?
+{customer} {ordertype}
+{burgerlist}
+
+
 </div>
