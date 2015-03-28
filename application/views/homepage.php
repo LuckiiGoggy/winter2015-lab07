@@ -1,9 +1,9 @@
 <div class="row">
-    Burger Bonanza?
+    Barker Bob's Burger Bar - Orders
     
     {orders}
     <br />
-        <a href='Welcome/order/{file}'>{title}</a>
+        <a href='Welcome/order/{file}'>{orderName} ({customerName})</a>
     {/orders}
     
     <br />

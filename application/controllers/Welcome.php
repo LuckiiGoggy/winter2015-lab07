@@ -20,6 +20,7 @@ class Welcome extends Application {
 
     function index()
     {
+        $this->load->model('Orders', 'orders');
 	// Build a list of orders
         $this->load->helper('directory');
         $this->load->model('Menu');
@@ -30,7 +31,8 @@ class Welcome extends Application {
         
         foreach($map as $file){
             if((substr_compare($file, $test, 0, strlen($test)) === 0)){
-                $temp = array(  'title' => substr($file, 0, 6) , 'file' => $file);
+                $this->orders->init($file);
+                $temp = $this->orders->getOrderInfo();
                 array_push($orderlist, $temp);
             }
         }
@@ -52,14 +54,12 @@ class Welcome extends Application {
     {
 	// Build a receipt for the chosen order
         $this->load->model('Orders', 'orders');
-        
         $this->orders->init($filename);
         
         $orderInfo = $this->orders->getOrderInfo();
         
-        print_r("<br /><br />");
-        print_r($orderInfo);
-        
+        $this->data['orderTotal'] = $orderInfo['orderTotal'];
+        $this->data['orderName'] = $orderInfo['orderName'];
         $this->data['ordertype'] = $orderInfo['orderType'];
         $this->data['customer'] = $orderInfo['customerName'];
         

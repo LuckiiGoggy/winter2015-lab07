@@ -9,9 +9,13 @@ class Orders extends CI_Model {
 
     protected $xml = null;
     
+    protected $orderName;
     protected $orderType;
     protected $customer;
+    protected $orderTotal = 0.00;
     protected $burgers = array();
+    protected $burgerCount = 0;
+    
 
     // Constructor
     public function __construct() {
@@ -23,6 +27,7 @@ class Orders extends CI_Model {
         $this->xml = simplexml_load_file(DATAPATH . $filename);
         $this->load->model("Menu", "menu");
 
+        $this->orderName = substr($filename, 0, strlen($filename) - strlen('.xml'));
         $this->orderType = (string)$this->xml['type'];
         $this->customer = (string)$this->xml->customer;
         
@@ -30,6 +35,7 @@ class Orders extends CI_Model {
         foreach ($this->xml->burger as $burger) {
             $record = new stdClass();
             
+            $record->id         = ++$this->burgerCount;
             $record->patties    = $this->getContents($burger->patty, 'type');
             $record->topCheeses = $this->getContents($burger->cheeses, 'top');
             $record->botCheeses = $this->getContents($burger->cheeses, 'bottom');
@@ -37,6 +43,8 @@ class Orders extends CI_Model {
             $record->sauces     = $this->getContents($burger->sauce, 'type');
             
             $record->price      = $this->calculateTotalPrice($record);
+            
+            $this->orderTotal += $record->price;
             
             array_push($this->burgers, $record);
         }
@@ -87,38 +95,28 @@ class Orders extends CI_Model {
             $burger_str = new stdClass();
             $cheeses = array_merge($burger->topCheeses, $burger->botCheeses);
 
-            $burger_str->pattylabel = $this->createLabel($burger->patties, "Patty: ");
+            
+            $burger_str->id = $burger->id;
             $burger_str->patty = $this->buildList($burger->patties, "getPatty");
-            $burger_str->cheeselabel = $this->createLabel($cheeses, "Cheese: ");
             $burger_str->topCheese = $this->buildList($burger->topCheeses, "getCheese", false, "(top)");
-            print_r(count($burger->topCheeses));
             $burger_str->botCheese = $this->buildList($burger->botCheeses, "getCheese", true, "(bottom)");
-            $burger_str->toppinglabel = $this->createLabel($burger->toppings, "Topping: ");
             $burger_str->topping = $this->buildList($burger->toppings, "getTopping");
-            $burger_str->saucelabel = $this->createLabel($burger->sauces, "Sauce: ");
             $burger_str->sauce = $this->buildList($burger->sauces, "getSauce");
             
-            $burger_str->pricelabel = "Price: ";
+            $burger_str->pricelabel = "Burger Total: ";
             $burger_str->price = "$" . $burger->price;
             
             array_push($burgers_str, $burger_str);
         }
         
-        print_r($this->burgers);
-        
         
         return $burgers_str;
     }
     
-    function createLabel($array, $label){
-        if(count($array) > 0){
-            return $label;
-        }
-        return "";        
-    }
-    
     function buildList($list, $func, $snip = true, $extras = ""){
         $string = "";
+        
+        if(count($list) < 1) return "none";
         
         foreach($list as $obj){
             if(($val = $this->menu->$func($obj)) != null) 
@@ -130,7 +128,9 @@ class Orders extends CI_Model {
     
     function getOrderInfo(){
         return array(
+            'orderName'     => $this->orderName,
             'orderType'     => $this->orderType,
+            'orderTotal'     => $this->orderTotal,
             'customerName'  => $this->customer,
             'burgers'       => $this->burgersAsStrings()
         );
